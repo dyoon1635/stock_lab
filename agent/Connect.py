@@ -197,7 +197,12 @@ class LS:
                       "tjj0006_dan", "tjj0007_dan", "tjj0008_dan", "tjj0009_dan",
                       "tjj0010_dan", "tjj0011_dan", "tjj0018_dan", "tjj0016_dan",
                       "tjj0017_dan"]
-
+        result = self._execute_query("t1717",
+                                     "t1717InBlock",
+                                     "t1717OutBlock",
+                                     *out_params,
+                                     **in_params)
+        
         for item in result:
             item["code"] = code
         return result

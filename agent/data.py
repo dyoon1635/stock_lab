@@ -1,6 +1,7 @@
 import requests
 import configparser
 import xml.etree.ElementTree as ET
+from urllib.parse import unquote
 
 class Data():
     CORP_CODE_URL = "http://api.seibro.or.kr/openapi/service/CorpSvc/getIssucoCustnoByNm"
@@ -20,13 +21,13 @@ class Data():
         :param name: str 회사명
         :return result: dict 회사 코드 및 회사명 반환
         """
-        query_param = {"ServiceKey":self.api_key,
+        query_param = {"serviceKey":self.api_key,
                        "IssucoNm":name,
                        "numOfRows": str(5000)}
         request_url = self.CORP_CODE_URL + "?"
         for key, value in query_param.items():
             request_url = request_url + key + "=" + value + "&"
-
+ 
         res = requests.get(request_url[:-1])
         root = ET.fromstring(res.text)
         from_tags = root.iter("items")
