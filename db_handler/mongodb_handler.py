@@ -1,6 +1,6 @@
 from pymongo import MongoClient
 from pymongo.cursor import CursorType
-import configparser
+import configparser, os
 
 class MongoDBHandler:
     def __init__(self):
@@ -8,8 +8,11 @@ class MongoDBHandler:
         config.ini 파일에서 MongoDB 접속 정보를 로딩
         접속 정볼르 이용해 MongoDB 접속에 사용할 client 생성
         """
+        #basedir = os.path.dirname(os.path.abspath(__file__))
+        #os.chdir(basedir)
+
         config = configparser.ConfigParser()
-        config.read('config/config.ini')
+        config.read('conf/config.ini', encoding='utf8')
         host = config['MONGODB']['host']
         port = config['MONGODB']['port']
 
@@ -100,7 +103,7 @@ class MongoDBHandler:
         :return UpdateResult: obj: PyMongo의 문서 갱신 결과 객체인 UpdateResult가 반환
         :raises Exception: 매개변수 db_name과 collection_name이 없으면 Exception발생
         """
-        if condition is None or not isinstance(collection, dict):
+        if condition is None or not isinstance(condition, dict):
             raise Exception("Need to condition")
         if update_value is None:
             raise Exception("Need to update value")
@@ -118,7 +121,7 @@ class MongoDBHandler:
         :return UpdateResult: obj: PyMongo의 문서 갱신 결과 객체인 UpdateResult가 반환
         :raises Exception: 매개변수 db_name과 collection_name이 없으면 Exception발생
         """
-        if condition is None or not isinstance(collection, dict):
+        if condition is None or not isinstance(condition, dict):
             raise Exception("Need to condition")
         if update_value is None:
             raise Exception("Need to update value")

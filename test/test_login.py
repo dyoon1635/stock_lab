@@ -55,3 +55,49 @@ class TestAgent(unittest.TestCase):
         result = self.LS.get_agent_trend_by_code("005930", fromdt="20240701", todt="20240719")
         assert result is not None
         print(result)
+
+    def test_get_account_info(self):
+        result = self.LS.get_account_info()
+        assert result is not None
+        print(result)
+
+    def test_get_account_stock_info(self):
+        result = self.LS.get_account_stock_info()
+        assert result is not None
+        print(result)
+
+    def test_order_stock(self):
+        print(inspect.stack()[0][3])
+        result = self.LS.order_stock("005930", "2", "50000", "2", "00")
+        assert result
+        print(result)
+    
+    def test_order_cancel(self):
+        print(inspect.stack()[0][3])
+        result = self.LS.order_cancel("29515", "A005930", "2")
+        assert result
+        print(result)
+    
+    def test_order_check(self):
+        print(inspect.stack()[0][3])
+        result = self.LS.order_check("29515")
+        assert result
+        print(result)
+    
+    def test_get_current_call_price_by_code(self):
+        print(inspect.stack()[0][3])
+        result = self.LS.get_current_call_price_by_code("005930")
+        assert result
+        print(result)
+
+    def test_get_price_n_min_by_code(self):
+        print(inspect.stack()[0][3])
+        result = self.LS.get_price_n_min_by_code("20190412", "180640")
+        assert result
+        print(result)
+    
+    def test_get_price_n_min_by_tick(self):
+        print(inspect.stack()[0][3])
+        result = self.LS.get_price_n_min_by_code("20190412", "005930", 0)
+        assert result
+        print(result)

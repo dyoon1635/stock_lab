@@ -228,6 +228,167 @@ class LS:
             item["code"] = code
         return result
 
+    def get_account_info(self):
+        """
+        TR: CSPAQ12200 현물계좌 예수금/주문가능금액/총평가
+        :return result: list Field CSPAQ12200
+        """
+        in_params = {"RecCnt":1, "AcntNo":self.account, "Pwd":self.passwd}
+        out_params = {"MnyOrdAbleAmt", "BalEvalAmt", "DpsastTotamt", "InvstOrgAmt", "InvstPlAmt", "Dps"}
+
+        result = self.execute_query("CSPAQ12200",
+                                    "CSPAQ12200InBlock1",
+                                    "CSPAQ12200OutBlock2",
+                                    *out_params,
+                                    **in_params)
+        return result
+
+    def get_account_stock_info(self):
+        """
+        TR: CSPAQ12300 현물계좌 잔고내역 조회
+        :return result: list 계좌 보유 종목 정보
+        """
+        in_params = {"RecCnt":1, "AcntNo":self.account, "Pwd":self.passwd, "BalCreTp":"0",
+                     "CmsnAppTpCode":"0", "D2balBaseQryTp":"0", "UprcTpCode":"0"}
+        out_params = ["IsuNo", "IsuNm", "BalQty", "SellPrc", "BuyPrc", "NowPrc", "AvrUprc", "BalEvalAmt", "PrdayCprc"]
+        result = self.execute_query("CSPAQ12300",
+                                    "CSPAQ12300InBlock1",
+                                    "CSPAQ12300OutBlock3",
+                                    *out_params,
+                                    **in_params)
+        return result
+    
+    def order_stock(self, code, qty, price, bns_type, order_type):
+        """
+        TR: CSPAT00600 현물 정상 주문
+        :param bns_type: str 매매타입, 1:매도, 2:매수
+        :param order_type: str 호가유형,
+            00:지정가, 03:시장가, 05:조건부지정가, 07:최우선지정가
+            61:장개시전시간외 종가, 81:시간외종가, 82:시간외단일가
+        :return result: dict 주문 관련 정보
+        """
+        in_params = {"AcntNo":self.account, "InptPwd":self.passwd, "IsuNo":code, "OrdQty":qty,
+                     "OrdPrc":price, "BnsTpCode":bns_type, "OrdprcPtnCode":order_type, 
+                     "'MgntrnCode":"000", "LoanDt":"", "OrdCndiTpCode":"0"}
+        out_params = ["OrdNo", "OrdTime", "OrdMktCode", "OrdPtnCode", "ShtnIsuNo", "MgempNo", "OrdAmt", "SpotOrdQty", "IsuNm"]
+        result = self.execute_query("CSPAT00600",
+                                    "CSPAT00600InBlock1",
+                                    "CSPAT00600OutBlock2",
+                                    *out_params,
+                                    **in_params)
+        return result
+
+    def order_cancel(self, order_no, code, qty):
+        """
+        TR: CSPAT00800 현물 취소주문
+        :param order_no: str 주문번호
+        :param code: str 종목코드
+        :param qty: str 취소수량
+        :return result: dict 취소 결과
+        """
+        in_params = {"OrgOrdNo":order_no, "AcntNo":self.account, "InptPwd":self.passwd, "IsuNo":code, "OrdQty":qty}
+        out_params = ["OrdNo", "PrntOrdNo", "OrdPtnCode", "IsuNm"]
+        result = self.execute_query("CSPAT00800",
+                                    "CSPAT00800InBlock1",
+                                    "CSPAT00800OutBlock2",
+                                    *out_params,
+                                    **in_params)
+        return result
+
+    def order_check(self, order_no):
+        """
+        TR: t0425 주식 체결/미체결
+        :param code: str 종목코드
+        :param order_no: str 주문번호
+        :return result: dict 주문번호의 체결상태
+        """
+        in_params = {"accno":self.account, "passwd":self.passwd, "expcode":"", "chegb":"0", "medosu":"0", "sortgb":"1", "cts_ordno":""}
+        out_params = ["ordno", "expcode", "medosu", "qty", "price", "cheqty", "cheprice", "ordrem", "cfmqty", "status", "orgordno", "ordgb",
+                      "ordermtd", "sysprocseq", "hogagb", "price1", "orggb", "singb", "loandt"]
+        result_list = self.execute_query("t0425",
+                                         "t0425InBlock",
+                                         "t0425OutBlock1",
+                                         *out_params,
+                                         **in_params)
+        result = {}
+        if order_no is not None:
+            for item in result_list:
+                if item["주문번호"] == order_no:
+                    result = item
+            return result
+        else:
+            return result_list
+    
+    def get_current_call_price_by_code(self, code=None):
+        """
+        TR: t1101 주식 현재가 호가 조회
+        :param code: str 종목코드
+        """
+        tr_code = "t1101"
+        in_params = {"shcode":code}
+        out_param = ["hname", "price", "sign", "change", "diff", "volume", "jnilclose", 
+                     "offerho1", "bidho1", "offerrem1", "bidrem1", 
+                     "offerho2", "bidho2", "offerrem2", "bidrem2",
+                     "offerho3", "bidho3", "offerrem3", "bidrem3",
+                     "offerho4", "bidho4", "offerrem4", "bidrem4",
+                     "offerho5", "bidho5", "offerrem5", "bidrem5",
+                     "offerho6", "bidho6", "offerrem6", "bidrem6",
+                     "offerho7", "bidho7", "offerrem7", "bidrem7",
+                     "offerho8", "bidho8", "offerrem8", "bidrem8",
+                     "offerho9", "bidho9", "offerrem9", "bidrem9",
+                     "offerho10", "bidho10", "offerrem10", "bidrem10",
+                     "preoffercha10", "prebidcha10", "offer", "bid",
+                     "preoffercha", "prebidcha", "hotime", "yeprice", "yevolume",
+                     "yesign", "yechange", "yediff", "tmoffer", "tmbid", "ho_status",
+                     "shcode", "uplmtprice", "dnlmtprice", "open", "high", "low"]
+        result = self.execute_query("t1101",
+                                    "t1101InBlock",
+                                    "t1101OutBlock",
+                                    *out_param,
+                                    **in_params)
+        
+        for item in result:
+            item["code"] = code
+        return result
+    
+    def get_tick_size(self, price):
+        """
+        호가 단위 조회 method
+        :param price: int 가격
+        :return 호가 단위
+        """
+        if price < 2000: return 1
+        elif 2000 <= price < 5000: return 5
+        elif 5000 <= price < 20000: return 10
+        elif 20000 <= price < 50000: return 50
+        elif 50000 <= price < 200000: return 100
+        elif 200000 <= price < 500000: return 500
+        elif 500000 <= price: return 1000
+    
+    def get_price_n_min_by_code(self, date, code, tick=None):
+        """
+        TR: t8412 주식차트(N분)
+        :param code: str 종목코드
+        :param date: str 시작시간
+        :return result: dict 하루치 분당 가격 정보
+        """
+        in_params = {"shcode":code, "ncnt":"1", "qrycnt":"500", "nday":"1", "sdate":date,
+                     "stime":"090000", "edate":"153000", "cts_date":"00000000", "cts_time":"00000000", "comp_yn":"N"}
+        out_params = ["date", "time", "open", "high", "low", "close", "jdiff_vol", "value"]
+
+        result_list = self.execute_query("t8412",
+                                         "t8412InBlock",
+                                         "t8412OutBlock1",
+                                         *out_params,
+                                         **in_params)
+        result = {}
+        for idx, item in enumerate(result_list):
+            result[idx] = item
+        if tick is not None:
+            return result[tick]
+        return result
+
+
 class XAQuery:
     RES_PATH =  "C:\\LS_SEC\\xingAPI\\Res\\"
     tr_run_state = 0
